@@ -1,0 +1,29 @@
+{
+    "name": "andufratu/jwt-auth",
+    "description": "A JWT Auth implementation for CakePHP 2.6+, inspired by https://github.com/ADmad/cakephp-jwt-auth",
+    "type": "cakephp-plugin",
+    "keywords": ["CakePHP", "JWT", "Auth", "plugin"],
+    "homepage": "https://github.com/andufratu/jwt-auth",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andu Fratu",
+            "email": "andu@fratu.ro"
+        }
+    ],
+    "require": {
+        "cakephp/cakephp": "2.6.*",
+        "composer/installers": "~1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "AnduFratu\\JWT\\": "Controller/Component/Auth"
+        }
+    },
+    "config": {
+        "vendor-dir": "Vendor/"
+    }
+}

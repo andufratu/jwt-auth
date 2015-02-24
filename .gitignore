@@ -5,3 +5,8 @@ app/tmp/*
 app/[Cc]onfig/core.php
 app/[Cc]onfig/database.php
 !empty
+.dir-locals.el
+GPATH
+GRTAGS
+GTAGS
+Vendor/*
