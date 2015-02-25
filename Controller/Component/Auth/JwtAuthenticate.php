@@ -1,21 +1,19 @@
 <?php
 namespace AnduFratu\Jwt;
 
-use \JWT;
-
 \App::uses('BaseAuthenticate', 'Controller/Component/Auth');
 
 class JwtAuthenticate extends \BaseAuthenticate
 {
-
-    const KEY = 'secretKey';
+    private $defaultSettings = array(
+        'param' => 'token',
+        'key' => 'EMPTY_KEY',
+    );
 
     public function __construct(\ComponentCollection $collection, $settings = array())
     {
         $settings = \Hash::merge(
-            array(
-                'param' => 'token',
-            ),
+            $this->defaultSettings,
             $settings
         );
 
@@ -29,24 +27,39 @@ class JwtAuthenticate extends \BaseAuthenticate
 
     public function getUser(\CakeRequest $request)
     {
-        $token = $this->_getToken($request);
+        $token = $this->getToken($request);
+        $user = false;
         if ($token)
         {
-            $username = $this->_getUsername($token);
-            return $this->_findUser($username);
+            try
+            {
+                $payload = (array) \JWT::decode($token, $this->settings['key']);
+                $username = $this->_findUser($payload['sub']);
+
+                $user = $this->_findUser($username);
+            }
+            catch (\UnexpectedValueException $e)
+            {
+                $user = false;
+            }
         }
 
-        return false;
+        return $user;
     }
 
-    private function _getToken(\CakeRequest $request)
+    private function getToken(\CakeRequest $request)
     {
-        return $request->param($this->settings['param']);
-    }
+        $headers = apache_request_headers();
+        if (isset($headers['Authorization']))
+        {
+            $authHeader = $headers['Authorization'];
+            $token = preg_replace('/Bearer (.+)$/', '$1', $authHeader);
+        }
+        else
+        {
+            $token = $request->param($this->settings['param']);
+        }
 
-    private function _getUsername($token)
-    {
-        $payload = (array) \JWT::decode($token, self::KEY);
-        $user = $this->_findUser($payload['sub']);
+        return $token;
     }
 }
