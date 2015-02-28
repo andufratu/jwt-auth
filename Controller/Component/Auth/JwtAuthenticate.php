@@ -47,6 +47,12 @@ class JwtAuthenticate extends \BaseAuthenticate
         return $user;
     }
 
+    public function unauthenticated(\CakeRequest $request, \CakeResponse $response)
+    {
+        throw new \ForbiddenException();
+        return true;
+    }
+
     private function getToken(\CakeRequest $request)
     {
         $headers = apache_request_headers();
