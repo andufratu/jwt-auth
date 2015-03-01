@@ -34,7 +34,7 @@ class JwtAuthenticate extends \BaseAuthenticate
             try
             {
                 $payload = (array) \JWT::decode($token, $this->settings['key']);
-                $username = $this->_findUser($payload['sub']);
+                $username = $payload['sub'];
 
                 $user = $this->_findUser($username);
             }
