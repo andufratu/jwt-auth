@@ -8,6 +8,7 @@ use \JWT;
 class JwtAuthenticateTest extends \CakeTestCase
 {
     const KEY = 'key';
+    const ALGORITHM = 'HS512';
     const OTHER_KEY = 'otherkey';
     const OTHER_USER_ID = 1;
     const PARAM_NAME = 'token';
@@ -51,6 +52,7 @@ class JwtAuthenticateTest extends \CakeTestCase
             ),
             'param' => self::PARAM_NAME,
             'key' => $this->keys,
+            'alg' => self::ALGORITHM,
             'userModel' => 'AnduFratu\\Jwt\\User',
         ));
     }
@@ -129,7 +131,7 @@ class JwtAuthenticateTest extends \CakeTestCase
 
     private function setToken($payload, $inHeader = true)
     {
-        $token = \JWT::encode($payload, $this->keys[self::USER_ID], 'HS512', self::USER_ID);
+        $token = \JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
         if ($inHeader)
         {
         }
