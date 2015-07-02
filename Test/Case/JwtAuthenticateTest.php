@@ -78,7 +78,10 @@ class JwtAuthenticateTest extends \CakeTestCase
         $this->verifyCorrectUserIsReturned();
     }
 
-    public function testExpiredTokenDeniesAuthorization()
+    /**
+     * @expectedException \AnduFratu\Jwt\TokenExpiredException
+     */
+    public function testExpiredTokenThrowsException()
     {
         $this->givenARequestWithAnExpiredToken();
 
@@ -102,10 +105,11 @@ class JwtAuthenticateTest extends \CakeTestCase
     private function givenARequestWithAnExpiredToken()
     {
         $payload = array(
+            'sub' => self::USER_EMAIL,
             'iat' => time() - 3601,
             'exp' => time() - 1,
         );
-        $this->setToken($payload);
+        $this->setToken($payload, false);
     }
 
     private function givenARequestWithAValidTokenInParams()
@@ -152,11 +156,6 @@ class JwtAuthenticateTest extends \CakeTestCase
     private function verifyCorrectUserIsReturned()
     {
         $this->assertEquals(self::USER_ID, $this->returnedUser['userId']);
-    }
-
-    private function verifyAuthorizationIsDenied()
-    {
-        $this->assertEquals(FALSE, $this->returnedUser);
     }
 }
 

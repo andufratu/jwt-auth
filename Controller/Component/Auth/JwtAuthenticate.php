@@ -39,6 +39,10 @@ class JwtAuthenticate extends \BaseAuthenticate
 
                 $user = $this->_findUser($username);
             }
+            catch (\ExpiredException $e)
+            {
+                throw new TokenExpiredException();
+            }
             catch (\UnexpectedValueException $e)
             {
                 $user = false;
