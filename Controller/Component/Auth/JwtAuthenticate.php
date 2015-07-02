@@ -8,6 +8,7 @@ class JwtAuthenticate extends \BaseAuthenticate
     private $defaultSettings = array(
         'param' => 'token',
         'key' => 'EMPTY_KEY',
+        'alg' => 'HS512',
     );
 
     public function __construct(\ComponentCollection $collection, $settings = array())
