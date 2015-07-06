@@ -7,8 +7,10 @@ use \JWT;
 
 class JwtAuthenticateTest extends \CakeTestCase
 {
+    const ALGORITHM = 'HS256';
+    const AUTH_CLAIM_NAME = 'auth';
+    const AUTH_CLAIM_VALUE = 'auth';
     const KEY = 'key';
-    const ALGORITHM = 'HS512';
     const OTHER_KEY = 'otherkey';
     const OTHER_USER_ID = 1;
     const PARAM_NAME = 'token';
@@ -54,6 +56,8 @@ class JwtAuthenticateTest extends \CakeTestCase
             'key' => $this->keys,
             'alg' => self::ALGORITHM,
             'userModel' => 'AnduFratu\\Jwt\\User',
+            'auth_type_claim_name' => self::AUTH_CLAIM_NAME,
+            'auth_type_claim_value' => self::AUTH_CLAIM_VALUE,
         ));
     }
 
@@ -79,7 +83,7 @@ class JwtAuthenticateTest extends \CakeTestCase
     }
 
     /**
-     * @expectedException \AnduFratu\Jwt\TokenExpiredException
+     * @expectedException \TokenExpiredException
      */
     public function testExpiredTokenThrowsException()
     {
@@ -108,6 +112,7 @@ class JwtAuthenticateTest extends \CakeTestCase
             'sub' => self::USER_EMAIL,
             'iat' => time() - 3601,
             'exp' => time() - 1,
+            self::AUTH_CLAIM_NAME => self::AUTH_CLAIM_VALUE,
         );
         $this->setToken($payload, false);
     }
@@ -130,6 +135,7 @@ class JwtAuthenticateTest extends \CakeTestCase
             'sub' => self::USER_EMAIL,
             'iat' => time(),
             'exp' => time() + 3600,
+            self::AUTH_CLAIM_NAME => self::AUTH_CLAIM_VALUE,
         );
     }
 
@@ -166,7 +172,7 @@ class TestController extends \Controller
 
 }
 
-class User extends \CakeTestModel
+class User extends \CakeTestModel implements \AnduFratu\Jwt\UserModel
 {
     public $useTable = false;
 
@@ -227,6 +233,10 @@ class User extends \CakeTestModel
         }
 
         return $filterOut;
+    }
+
+    public function getRefreshToken(array $user) {
+        return 'REFRESH_TOKEN';
     }
 }
 

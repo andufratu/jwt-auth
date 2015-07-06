@@ -1,10 +1,18 @@
 <?php
-namespace AnduFratu\Jwt;
-
-class TokenExpiredException extends \CakeException
+class TokenExpiredException extends CakeException
 {
-    public function __construct()
+    const ERROR_CODE = 403;
+
+    private $refreshToken = null;
+
+    public function __construct($refreshToken)
     {
-        parent::__construct('Token expired');
+        $this->refreshToken = $refreshToken;
+        parent::__construct('Token expired', self::ERROR_CODE);
+    }
+
+    public function getRefreshToken()
+    {
+        return $this->refreshToken;
     }
 }

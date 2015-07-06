@@ -2,13 +2,17 @@
 namespace AnduFratu\Jwt;
 
 \App::uses('BaseAuthenticate', 'Controller/Component/Auth');
+// TODO: Figure out a different way to include this
+include 'TokenExpiredException.php';
 
 class JwtAuthenticate extends \BaseAuthenticate
 {
     private $defaultSettings = array(
         'param' => 'token',
-        'key' => 'EMPTY_KEY',
-        'alg' => 'HS512',
+        'key' => NULL,
+        'alg' => 'RS256',
+        'auth_type_claim_name' => 'auth',
+        'auth_type_claim_value' => 'auth',
     );
 
     public function __construct(\ComponentCollection $collection, $settings = array())
@@ -41,7 +45,24 @@ class JwtAuthenticate extends \BaseAuthenticate
             }
             catch (\ExpiredException $e)
             {
-                throw new TokenExpiredException();
+                $tks = explode('.', $token);
+                list($headb64, $bodyb64, $cryptob64) = $tks;
+                $payload = \JWT::jsonDecode(\JWT::urlsafeB64Decode($bodyb64));
+                if ($payload->{$this->settings['auth_type_claim_name']} === $this->settings['auth_type_claim_value'])
+                {
+                    $usernameField = $this->settings['fields']['username'];
+                    $userModel = \ClassRegistry::init($this->settings['userModel']);
+                    $user = $userModel->find('first', array(
+                        'conditions' => array(
+                            $usernameField => $payload->sub,
+                        )
+                    ));
+                    throw new \TokenExpiredException($userModel->getRefreshToken($user));
+                }
+                else
+                {
+                    throw new ForbiddenException('Token invalid');
+                }
             }
             catch (\UnexpectedValueException $e)
             {
