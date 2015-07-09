@@ -1,7 +1,7 @@
 <?php
 class TokenExpiredException extends CakeException
 {
-    const ERROR_CODE = 403;
+    const ERROR_CODE = 401;
 
     private $refreshToken = null;
 

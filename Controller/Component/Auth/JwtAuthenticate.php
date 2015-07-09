@@ -15,6 +15,8 @@ class JwtAuthenticate extends \BaseAuthenticate
         'auth_type_claim_value' => 'auth',
     );
 
+    private $errorMessage;
+
     public function __construct(\ComponentCollection $collection, $settings = array())
     {
         $settings = \Hash::merge(
@@ -59,14 +61,10 @@ class JwtAuthenticate extends \BaseAuthenticate
                     ));
                     throw new \TokenExpiredException($userModel->getRefreshToken($user));
                 }
-                else
-                {
-                    throw new ForbiddenException('Token invalid');
-                }
             }
-            catch (\UnexpectedValueException $e)
+            catch (\Exception $e)
             {
-                $user = false;
+                $this->errorMessage = $e->getMessage();
             }
         }
 
@@ -75,7 +73,7 @@ class JwtAuthenticate extends \BaseAuthenticate
 
     public function unauthenticated(\CakeRequest $request, \CakeResponse $response)
     {
-        throw new \ForbiddenException();
+        throw new \TokenInvalidException('Token invalid: ' . $this->message);
         return true;
     }
 
