@@ -7,5 +7,23 @@ php:
    - nightly
 install:
   composer install
+before_script:
+  - sh -c "mysql -e 'CREATE DATABASE cakephp_test;'"
+  - echo "<?php
+
+    class DATABASE_CONFIG {
+
+        public \$test = array(
+            'persistent' => false,
+            'datasource' => 'Database/Mysql',
+            'host'       => '0.0.0.0',
+            'database'   => 'cakephp_test',
+            'login'      => 'travis',
+            'password'   => '',
+            'encoding'   => 'utf8'
+        );
+
+    }" > Config/database.php
+
 script:
   Vendor/bin/cake test app JwtAuthenticate
