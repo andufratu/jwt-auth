@@ -8,8 +8,9 @@ use \JWT;
 class JwtAuthenticateTest extends \CakeTestCase
 {
     const ALGORITHM = 'HS256';
-    const AUTH_CLAIM_NAME = 'auth';
-    const AUTH_CLAIM_VALUE = 'auth';
+    const TYPE_CLAIM_NAME = 'type';
+    const TYPE_CLAIM_AUTH_VALUE = 'auth';
+    const TYPE_CLAIM_REFRESH_VALUE = 'refresh';
     const KEY = 'key';
     const OTHER_KEY = 'otherkey';
     const OTHER_USER_ID = 1;
@@ -56,8 +57,8 @@ class JwtAuthenticateTest extends \CakeTestCase
             'key' => $this->keys,
             'alg' => self::ALGORITHM,
             'userModel' => 'AnduFratu\\Jwt\\User',
-            'auth_type_claim_name' => self::AUTH_CLAIM_NAME,
-            'auth_type_claim_value' => self::AUTH_CLAIM_VALUE,
+            'auth_type_claim_name' => self::TYPE_CLAIM_NAME,
+            'auth_type_claim_value' => self::TYPE_CLAIM_AUTH_VALUE,
         ));
     }
 
@@ -73,7 +74,6 @@ class JwtAuthenticateTest extends \CakeTestCase
 
     public function testReturnsCorrectUserForValidTokenFromHeader()
     {
-        $this->marKTestIncomplete('Need to figure out how to mock out headers');
         $this->givenARequestWithAValidTokenInHeader();
         $this->givenAUser();
 
@@ -82,16 +82,41 @@ class JwtAuthenticateTest extends \CakeTestCase
         $this->verifyCorrectUserIsReturned();
     }
 
-    /**
-     * @expectedException \TokenExpiredException
-     */
-    public function testExpiredTokenThrowsException()
+    public function testExpiredTokenThrowsTokenExpiredException()
     {
+        $this->setExpectedException('TokenExpiredException');
         $this->givenARequestWithAnExpiredToken();
 
         $this->whenGettingUser();
+    }
 
-        $this->verifyAuthorizationIsDenied();
+    public function testExpiredTokenReturnsFalseIfNotTheRightType()
+    {
+        $this->givenARequestWithAnExpiredToken(self::TYPE_CLAIM_REFRESH_VALUE);
+
+        $this->whenGettingUser();
+
+        $this->verifyAuthorizationDenied();
+    }
+
+    public function testUnexpectedErrorDeniesAuthorization()
+    {
+        $this->givenARequestWithAnInvalidToken();
+
+        $this->whenGettingUser();
+
+        $this->verifyAuthorizationDenied();
+    }
+
+    public function testAuthenticateReturnsFalse()
+    {
+        $this->assertFalse($this->jwt->authenticate($this->request, $this->getMock('\CakeResponse')));
+    }
+
+    public function testUnauthenticatedThrowsTokenInvalidException()
+    {
+        $this->setExpectedException('TokenInvalidException');
+        $this->jwt->unauthenticated($this->request, $this->getMock('\CakeResponse'));
     }
 
     private function givenAUser()
@@ -106,27 +131,36 @@ class JwtAuthenticateTest extends \CakeTestCase
         );
     }
 
-    private function givenARequestWithAnExpiredToken()
+    private function givenARequestWithAnExpiredToken($authClaimValue = self::TYPE_CLAIM_AUTH_VALUE)
     {
         $payload = array(
             'sub' => self::USER_EMAIL,
             'iat' => time() - 3601,
             'exp' => time() - 1,
-            self::AUTH_CLAIM_NAME => self::AUTH_CLAIM_VALUE,
+            self::TYPE_CLAIM_NAME => $authClaimValue,
         );
-        $this->setToken($payload, false);
+        $token = \JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
+        $this->setToken($token);
+    }
+
+    private function givenARequestWithAnInvalidToken()
+    {
+        $token = 'NOTAVALIDTOKEN';
+        $this->setToken($token);
     }
 
     private function givenARequestWithAValidTokenInParams()
     {
         $payload = $this->getValidTokenPayload();
-        $this->setToken($payload, false);
+        $token = \JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
+        $this->setToken($token, false);
     }
 
     private function givenARequestWithAValidTokenInHeader()
     {
         $payload = $this->getValidTokenPayload();
-        $this->setToken($payload);
+        $token = \JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
+        $this->setToken($token);
     }
 
     private function getValidTokenPayload()
@@ -135,15 +169,18 @@ class JwtAuthenticateTest extends \CakeTestCase
             'sub' => self::USER_EMAIL,
             'iat' => time(),
             'exp' => time() + 3600,
-            self::AUTH_CLAIM_NAME => self::AUTH_CLAIM_VALUE,
+            self::TYPE_CLAIM_NAME => self::TYPE_CLAIM_AUTH_VALUE,
         );
     }
 
-    private function setToken($payload, $inHeader = true)
+    private function setToken($token, $inHeader = true)
     {
-        $token = \JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
         if ($inHeader)
         {
+            $this->request->staticExpects($this->once())
+                ->method('header')
+                ->with('Authorization')
+                ->will($this->returnValue($token));
         }
         else
         {
@@ -162,6 +199,11 @@ class JwtAuthenticateTest extends \CakeTestCase
     private function verifyCorrectUserIsReturned()
     {
         $this->assertEquals(self::USER_ID, $this->returnedUser['userId']);
+    }
+
+    private function verifyAuthorizationDenied()
+    {
+        $this->assertEquals(false, $this->returnedUser);
     }
 }
 
@@ -239,11 +281,3 @@ class User extends \CakeTestModel implements \AnduFratu\Jwt\UserModel
         return 'REFRESH_TOKEN';
     }
 }
-
-/**
- * @TODO: Remove this fucking crap from here!
- */
-function apache_request_headers()
-{
-    return array();
-};

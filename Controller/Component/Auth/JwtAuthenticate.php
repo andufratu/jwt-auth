@@ -4,6 +4,7 @@ namespace AnduFratu\Jwt;
 \App::uses('BaseAuthenticate', 'Controller/Component/Auth');
 // TODO: Figure out a different way to include this
 include 'TokenExpiredException.php';
+include 'TokenInvalidException.php';
 
 class JwtAuthenticate extends \BaseAuthenticate
 {
@@ -73,16 +74,15 @@ class JwtAuthenticate extends \BaseAuthenticate
 
     public function unauthenticated(\CakeRequest $request, \CakeResponse $response)
     {
-        throw new \TokenInvalidException('Token invalid: ' . $this->message);
+        throw new \TokenInvalidException('Token invalid: ' . $this->errorMessage);
         return true;
     }
 
     private function getToken(\CakeRequest $request)
     {
-        $headers = apache_request_headers();
-        if (isset($headers['Authorization']))
+        $authHeader = $request->header('Authorization');
+        if ($authHeader)
         {
-            $authHeader = $headers['Authorization'];
             $token = preg_replace('/Bearer (.+)$/', '$1', $authHeader);
         }
         else
