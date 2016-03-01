@@ -30,7 +30,30 @@ class JwtAuthenticate extends \BaseAuthenticate
 
     public function authenticate(\CakeRequest $request, \CakeResponse $response)
     {
-        return false;
+        $token = $this->getToken($request);
+        $user = false;
+        if ($token)
+        {
+            try
+            {
+                $payload = (array) \JWT::decode($token, $this->settings['key'], array($this->settings['alg']));
+                $username = $payload['sub'];
+                $user = $this->_findUser($username);
+            }
+            catch (\ExpiredException $e)
+            {
+                $tks = explode('.', $token);
+                list($headb64, $bodyb64, $cryptob64) = $tks;
+                $payload = \JWT::jsonDecode(\JWT::urlsafeB64Decode($bodyb64));
+                $username = $payload->sub;
+                $user = $this->_findUser($username);
+            }
+            catch (\Exception $e)
+            {
+                // Treat as non-authenticated
+            }
+        }
+        return $user;
     }
 
     public function getUser(\CakeRequest $request)
