@@ -1,7 +1,7 @@
 <?php
 namespace AnduFratu\Jwt;
 
-use \JWT;
+use Firebase\JWT\JWT;
 
 \App::uses('Controller', 'Controller');
 
@@ -139,7 +139,7 @@ class JwtAuthenticateTest extends \CakeTestCase
             'exp' => time() - 1,
             self::TYPE_CLAIM_NAME => $authClaimValue,
         );
-        $token = \JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
+        $token = JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
         $this->setToken($token);
     }
 
@@ -152,14 +152,14 @@ class JwtAuthenticateTest extends \CakeTestCase
     private function givenARequestWithAValidTokenInParams()
     {
         $payload = $this->getValidTokenPayload();
-        $token = \JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
+        $token = JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
         $this->setToken($token, false);
     }
 
     private function givenARequestWithAValidTokenInHeader()
     {
         $payload = $this->getValidTokenPayload();
-        $token = \JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
+        $token = JWT::encode($payload, $this->keys[self::USER_ID], self::ALGORITHM, self::USER_ID);
         $this->setToken($token);
     }
 

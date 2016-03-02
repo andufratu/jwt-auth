@@ -1,6 +1,8 @@
 <?php
 namespace AnduFratu\Jwt;
 
+use Firebase\JWT\JWT;
+
 \App::uses('BaseAuthenticate', 'Controller/Component/Auth');
 // TODO: Figure out a different way to include this
 include 'TokenExpiredException.php';
@@ -36,15 +38,15 @@ class JwtAuthenticate extends \BaseAuthenticate
         {
             try
             {
-                $payload = (array) \JWT::decode($token, $this->settings['key'], array($this->settings['alg']));
+                $payload = (array) JWT::decode($token, $this->settings['key'], array($this->settings['alg']));
                 $username = $payload['sub'];
                 $user = $this->_findUser($username);
             }
-            catch (\ExpiredException $e)
+            catch (\Firebase\JWT\ExpiredException $e)
             {
                 $tks = explode('.', $token);
                 list($headb64, $bodyb64, $cryptob64) = $tks;
-                $payload = \JWT::jsonDecode(\JWT::urlsafeB64Decode($bodyb64));
+                $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($bodyb64));
                 $username = $payload->sub;
                 $user = $this->_findUser($username);
             }
@@ -64,16 +66,16 @@ class JwtAuthenticate extends \BaseAuthenticate
         {
             try
             {
-                $payload = (array) \JWT::decode($token, $this->settings['key'], array($this->settings['alg']));
+                $payload = (array) JWT::decode($token, $this->settings['key'], array($this->settings['alg']));
                 $username = $payload['sub'];
 
                 $user = $this->_findUser($username);
             }
-            catch (\ExpiredException $e)
+            catch (\Firebase\JWT\ExpiredException $e)
             {
                 $tks = explode('.', $token);
                 list($headb64, $bodyb64, $cryptob64) = $tks;
-                $payload = \JWT::jsonDecode(\JWT::urlsafeB64Decode($bodyb64));
+                $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($bodyb64));
                 if ($payload->{$this->settings['auth_type_claim_name']} === $this->settings['auth_type_claim_value'])
                 {
                     $usernameField = $this->settings['fields']['username'];
