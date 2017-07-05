@@ -4,9 +4,6 @@ namespace AnduFratu\Jwt;
 use Firebase\JWT\JWT;
 
 \App::uses('BaseAuthenticate', 'Controller/Component/Auth');
-// TODO: Figure out a different way to include this
-include 'TokenExpiredException.php';
-include 'TokenInvalidException.php';
 
 class JwtAuthenticate extends \BaseAuthenticate
 {
